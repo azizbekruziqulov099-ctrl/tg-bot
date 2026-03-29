@@ -1,6 +1,8 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
+user_states = {}
+user_data = {}
 
 TOKEN = os.getenv("TOKEN")
 
@@ -14,7 +16,72 @@ menu = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+elif text == "📊 PPT yaratish":
+    user_states[user_id] = "topic"
+    await update.message.reply_text("📌 PPT mavzusini yozing:")
+if user_states.get(user_id) == "topic":
+    user_data[user_id] = {"topic": text}
+    user_states[user_id] = "type"
 
+    await update.message.reply_text(
+        "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
+    )
+    if user_states.get(user_id) == "topic":
+    user_data[user_id] = {"topic": text}
+    user_states[user_id] = "type"
+
+    await update.message.reply_text(
+        "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
+    )
+    elif user_states.get(user_id) == "design":
+    user_data[user_id]["design"] = text
+    user_states[user_id] = "style"
+
+    await update.message.reply_text(
+        "🖼 Rasm stilini tanlang (1–5):"
+    )
+    elif user_states.get(user_id) == "design":
+    user_data[user_id]["design"] = text
+    user_states[user_id] = "style"
+
+    await update.message.reply_text(
+        "🖼 Rasm stilini tanlang (1–5):"
+    )
+elif user_states.get(user_id) == "slides":
+    slides = int(text)
+
+    if slides < 5 or slides > 60:
+        await update.message.reply_text("❌ 5–60 oralig‘ida kiriting")
+        return
+
+    user_data[user_id]["slides"] = slides
+    user_states[user_id] = None
+
+    await update.message.reply_text("⏳ PPT tayyorlanmoqda...")
+user_data[user_id]
+{
+ "topic": "...",
+ "type": "...",
+ "design": "...",
+ "style": "...",
+ "slides": 20
+}
+{
+ "topic": "...",
+ "type": "...",
+ "design": "...",
+ "style": "...",
+ "slides": 20
+}
+await update.message.reply_text("Tasdiqlaysizmi? (ha/yo‘q)")
+user_states[user_id] = "confirm"
+elif user_states.get(user_id) == "confirm":
+    if text.lower() == "ha":
+        await update.message.reply_text("🚀 PPT yaratilmoqda...")
+    else:
+        await update.message.reply_text("❌ Bekor qilindi")
+    
+    user_states[user_id] = None
 user_balances = {}
 
 def get_balance(user_id):
@@ -32,13 +99,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_id = update.message.from_user.id
 
-    if text == "📊 PPT yaratish":
-        if get_balance(user_id) < 10:
-            await update.message.reply_text("❌ Tanga yetarli emas")
-            return
-        
-        user_balances[user_id] -= 10
-        await update.message.reply_text("⏳ PPT tayyorlanmoqda...")
+ if text == "📊 PPT yaratish":
+    if get_balance(user_id) < 10:
+        await update.message.reply_text("❌ Tanga yetarli emas")
+        return
+
+    user_states[user_id] = "topic"
+    await update.message.reply_text("📌 PPT mavzusini yozing:")
+ # tanga ayiramiz
+user_balances[user_id] -= user_data[user_id]["slides"]
+    elif user_states.get(user_id) == "slides":
+    slides = int(text)
+
+    if slides < 5 or slides > 60:
+        await update.message.reply_text("❌ 5–60 oralig‘ida kiriting")
+        return
+
+    user_data[user_id]["slides"] = slides
+    user_states[user_id] = None
+
+    # 💰 TANGA AYIRISH
+    if get_balance(user_id) < slides:
+        await update.message.reply_text("❌ Tanga yetarli emas")
+        return
+
+    user_balances[user_id] -= slides
+
+    await update.message.reply_text("⏳ PPT tayyorlanmoqda...")
+
 
     elif text == "🪙 Tangalarim":
         await update.message.reply_text(f"{get_balance(user_id)} ta tanga bor 🪙")
