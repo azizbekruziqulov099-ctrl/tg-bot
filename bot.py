@@ -86,6 +86,27 @@ async def add_coin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ Tanga qo‘shildi")
     except:
         await update.message.reply_text("Xato format")
+async def add_coin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.from_user.id != ADMIN_ID:
+        return
+    
+    try:
+        user_id = int(context.args[0])
+        amount = int(context.args[1])
+
+        user_balances[user_id] = user_balances.get(user_id, 0) + amount
+
+        # 👇 ADMIN ga
+        await update.message.reply_text("✅ Tanga qo‘shildi")
+
+        # 👇 USER ga xabar
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=f"💰 Hisobingizga {amount} ta tanga qo‘shildi!"
+        )
+
+    except:
+        await update.message.reply_text("Xato format")
 
 app = ApplicationBuilder().token(TOKEN).build()
 
