@@ -4,6 +4,7 @@ import os
 from flask import Flask
 import threading
 
+# 🌐 KEEP ALIVE
 app_web = Flask(__name__)
 
 @app_web.route("/")
@@ -43,12 +44,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=menu
     )
 
-# MESSAGE HANDLER
+# MAIN LOGIC
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     user_id = update.message.from_user.id
 
-    # 🎯 BOSHLASH
+    # 🚀 BOSHLASH
     if text == "📊 PPT yaratish":
         if get_balance(user_id) < 5:
             await update.message.reply_text("❌ Tanga yetarli emas")
@@ -59,75 +60,53 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # 📌 MAVZU
-    if  
-       user_states[user_id] = "content_choice"
-
-await update.message.reply_text(
-    "📝 Maruza matni bormi?\n\n"
-    "1️⃣ Ha (o‘zim yozaman)\n"
-    "2️⃣ Yo‘q (o‘zi generatsiya qilsin)"
-)
-user_states[user_id] = "content_choice"
-
-await update.message.reply_text(
-    "📝 Maruza matni bormi?\n\n"
-    "1️⃣ Ha (o‘zim yozaman)\n"
-    "2️⃣ Yo‘q (o‘zi generatsiya qilsin)"
-)
-if user_states.get(user_id) == "content_choice":
-    if text == "1" or "ha" in text.lower():
-        user_states[user_id] = "content_input"
-        await update.message.reply_text("📝 Maruza matnini yuboring:")
-    else:
-        user_data[user_id]["content"] = "auto"
-        user_states[user_id] = "type"
-
-        await update.message.reply_text(
-            "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
-        )
-    return
+    if user_states.get(user_id) == "topic":
         user_data[user_id] = {"topic": text}
-        user_states[user_id] = "type"
+        user_states[user_id] = "content_choice"
 
         await update.message.reply_text(
-            "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
+            "📝 Maruza matni bormi?\n\n"
+            "1️⃣ Ha\n2️⃣ Yo‘q (o‘zi qiladi)"
         )
+        return
+
+    # 📝 MATN TANLOV
+    if user_states.get(user_id) == "content_choice":
+        if text == "1":
+            user_states[user_id] = "content_input"
+            await update.message.reply_text("📝 Matnni yozing:")
+        else:
+            user_data[user_id]["content"] = "auto"
+            user_states[user_id] = "type"
+            await update.message.reply_text("📝 Tur tanlang (1 yoki 2):")
+        return
+
+    # ✍️ MATN KIRITISH
+    if user_states.get(user_id) == "content_input":
+        user_data[user_id]["content"] = text
+        user_states[user_id] = "type"
+        await update.message.reply_text("📝 Tur tanlang (1 yoki 2):")
         return
 
     # 📝 TUR
     if user_states.get(user_id) == "type":
         user_data[user_id]["type"] = text
         user_states[user_id] = "design"
-
-        await update.message.reply_text("🎨 Dizayn tanlang (1–6):")
+        await update.message.reply_text("🎨 Dizayn (1–6):")
         return
-content = data.get("content", "auto")
-
-if content == "auto":
-    content_text = "🤖 Avtomatik generatsiya"
-else:
-    content_text = content[:200] + "..."  # uzun bo‘lsa qisqartir
-content = data.get("content", "auto")
-
-if content == "auto":
-    content_text = "🤖 Avtomatik generatsiya"
-else:
-    content_text = content[:200] + "..."  # uzun bo‘lsa qisqartir
 
     # 🎨 DIZAYN
     if user_states.get(user_id) == "design":
         user_data[user_id]["design"] = text
         user_states[user_id] = "style"
-
-        await update.message.reply_text("🖼 Stil tanlang (1–5):")
+        await update.message.reply_text("🖼 Stil (1–5):")
         return
 
     # 🖼 STIL
     if user_states.get(user_id) == "style":
         user_data[user_id]["style"] = text
         user_states[user_id] = "slides"
-
-        await update.message.reply_text("📄 Slayd soni (5–60):")
+        await update.message.reply_text("📄 Slayd (5–60):")
         return
 
     # 📄 SLAYD
@@ -152,20 +131,26 @@ else:
 
         data = user_data[user_id]
 
+        content = data.get("content", "auto")
+        if content == "auto":
+            content_text = "🤖 Avtomatik"
+        else:
+            content_text = content[:200] + "..."
+
         summary = (
             f"📊 PPT ma'lumotlari:\n\n"
             f"📌 Mavzu: {data['topic']}\n"
+            f"🧾 Matn: {content_text}\n"
             f"📝 Tur: {data['type']}\n"
             f"🎨 Dizayn: {data['design']}\n"
             f"🖼 Stil: {data['style']}\n"
             f"📄 Slayd: {data['slides']}\n"
         )
 
-        await update.message.reply_text(summary + "\n⏳ Tayyorlanmoqda...")
-
+        await update.message.reply_text(summary)
         await context.bot.send_message(
             chat_id=ADMIN_ID,
-            text=f"🆕 Yangi PPT!\nUser: {user_id}\n\n{summary}"
+            text=f"🆕 Yangi PPT\nUser: {user_id}\n\n{summary}"
         )
         return
 
@@ -177,17 +162,8 @@ else:
     # 💰 SOTIB OLISH
     if text == "💰 Tanga sotib olish":
         await update.message.reply_text(
-            "💳 Paketlar:\n\n"
-            "10 tanga = 5,000 so‘m\n"
-            "40 tanga = 20,000 so‘m\n\n"
-            "💸 Karta: 8600 XXXX XXXX XXXX\n"
-            "Chek yuboring 📸"
+            "💳 10 tanga = 5000 so‘m\n40 tanga = 20000 so‘m\n\nChek yuboring 📸"
         )
-        return
-
-    # ℹ️ YORDAM
-    if text == "ℹ️ Yordam":
-        await update.message.reply_text("Bot PPT yaratadi")
         return
 
     await update.message.reply_text("Tushunmadim 😅")
@@ -211,21 +187,17 @@ async def add_coin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.from_user.id != ADMIN_ID:
         return
 
-    try:
-        user_id = int(context.args[0])
-        amount = int(context.args[1])
+    user_id = int(context.args[0])
+    amount = int(context.args[1])
 
-        user_balances[user_id] = user_balances.get(user_id, 0) + amount
+    user_balances[user_id] = user_balances.get(user_id, 0) + amount
 
-        await update.message.reply_text("✅ Qo‘shildi")
+    await update.message.reply_text("✅ Qo‘shildi")
 
-        await context.bot.send_message(
-            chat_id=user_id,
-            text=f"💰 +{amount} tanga qo‘shildi!\nJami: {user_balances[user_id]}"
-        )
-
-    except:
-        await update.message.reply_text("Xato format")
+    await context.bot.send_message(
+        chat_id=user_id,
+        text=f"💰 +{amount} tanga qo‘shildi!\nJami: {user_balances[user_id]}"
+    )
 
 
 # RUN
