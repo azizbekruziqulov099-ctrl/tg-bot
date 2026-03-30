@@ -1,6 +1,9 @@
 from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+
 from flask import Flask
 import threading
 
@@ -38,6 +41,37 @@ def get_balance(user_id):
     return user_balances[user_id]
 
 # START
+    async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    user_id = query.from_user.id
+    data = query.data
+
+    # 🎨 DESIGN
+    if data.startswith("design"):
+        user_data[user_id]["design"] = data.split("_")[1]
+        user_states[user_id] = "style"
+
+        keyboard = [
+            [InlineKeyboardButton("1", callback_data="style_1"),
+             InlineKeyboardButton("2", callback_data="style_2"),
+             InlineKeyboardButton("3", callback_data="style_3")],
+            [InlineKeyboardButton("4", callback_data="style_4"),
+             InlineKeyboardButton("5", callback_data="style_5")]
+        ]
+
+        await query.message.reply_text(
+            "🖼 Stil tanlang:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    # 🖼 STYLE
+    elif data.startswith("style"):
+        user_data[user_id]["style"] = data.split("_")[1]
+        user_states[user_id] = "slides"
+
+        await query.message.reply_text("📄 Slayd soni (5–60):")
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Xush kelibsiz 🚀\nSizga 10 ta tanga berildi 🎁",
@@ -117,15 +151,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_states.get(user_id) == "type":
         user_data[user_id]["type"] = text
         user_states[user_id] = "design"
+        keyboard = [
+    [InlineKeyboardButton("1", callback_data="style_1"),
+     InlineKeyboardButton("2", callback_data="style_2"),
+     InlineKeyboardButton("3", callback_data="style_3")],
+    [InlineKeyboardButton("4", callback_data="style_4"),
+     InlineKeyboardButton("5", callback_data="style_5"),
+     InlineKeyboardButton("6", callback_data="design_6")]]
+]
         await update.message.reply_text("🎨 Dizayn (1–6):")
         return
 
     # 🎨 DIZAYN
-    if user_states.get(user_id) == "design":
-        user_data[user_id]["design"] = text
-        user_states[user_id] = "style"
-        await update.message.reply_text("🖼 Stil (1–5):")
-        return
+if user_states.get(user_id) == "type":
+    user_data[user_id]["type"] = text
+    user_states[user_id] = "design"
+
+    keyboard = [
+        [InlineKeyboardButton("1", callback_data="design_1"),
+         InlineKeyboardButton("2", callback_data="design_2"),
+         InlineKeyboardButton("3", callback_data="design_3")],
+        [InlineKeyboardButton("4", callback_data="design_4"),
+         InlineKeyboardButton("5", callback_data="design_5")
+    ]
+
+    await update.message.reply_text(
+        "🎨 Dizayn tanlang:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    return
 
     # 🖼 STIL
     if user_states.get(user_id) == "style":
@@ -232,5 +286,5 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("add", add_coin))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-
+app.add_handler(CallbackQueryHandler(handle_buttons))
 app.run_polling()
