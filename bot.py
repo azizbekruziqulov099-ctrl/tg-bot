@@ -1,6 +1,19 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import os
+from flask import Flask
+import threading
+
+app_web = Flask(__name__)
+
+@app_web.route("/")
+def home():
+    return "Bot ishlayapti!"
+
+def run_web():
+    app_web.run(host="0.0.0.0", port=10000)
+
+threading.Thread(target=run_web).start()
 
 TOKEN = os.getenv("TOKEN")
 ADMIN_ID = 401251407
