@@ -71,15 +71,40 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # 📝 MATN TANLOV
-    if user_states.get(user_id) == "content_choice":
-        if text == "1":
-            user_states[user_id] = "content_input"
-            await update.message.reply_text("📝 Matnni yozing:")
-        else:
-            user_data[user_id]["content"] = "auto"
-            user_states[user_id] = "type"
-            await update.message.reply_text("📝 Tur tanlang (1 yoki 2):")
-        return
+   if user_states.get(user_id) == "content_choice":
+    if text in ["1", "ha", "Ha", "HA"]:
+        user_states[user_id] = "content_input"
+        await update.message.reply_text("📝 Maruza matnini yozing (1000 so‘zgacha):")
+    
+    elif text in ["2", "yoq", "yo'q", "Yo‘q", "yo‘q"]:
+        user_data[user_id]["content"] = "auto"
+        user_states[user_id] = "type"
+
+        await update.message.reply_text(
+            "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
+        )
+    
+    else:
+        await update.message.reply_text("❌ 1 yoki 2 tanlang")
+    
+    return
+       if user_states.get(user_id) == "content_choice":
+    if text in ["1", "ha", "Ha", "HA"]:
+        user_states[user_id] = "content_input"
+        await update.message.reply_text("📝 Maruza matnini yozing (1000 so‘zgacha):")
+    
+    elif text in ["2", "yoq", "yo'q", "Yo‘q", "yo‘q"]:
+        user_data[user_id]["content"] = "auto"
+        user_states[user_id] = "type"
+
+        await update.message.reply_text(
+            "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
+        )
+    
+    else:
+        await update.message.reply_text("❌ 1 yoki 2 tanlang")
+    
+    return
 
     # ✍️ MATN KIRITISH
     if user_states.get(user_id) == "content_input":
