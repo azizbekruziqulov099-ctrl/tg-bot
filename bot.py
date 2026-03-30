@@ -59,7 +59,33 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # 📌 MAVZU
-    if user_states.get(user_id) == "topic":
+    if  
+       user_states[user_id] = "content_choice"
+
+await update.message.reply_text(
+    "📝 Maruza matni bormi?\n\n"
+    "1️⃣ Ha (o‘zim yozaman)\n"
+    "2️⃣ Yo‘q (o‘zi generatsiya qilsin)"
+)
+user_states[user_id] = "content_choice"
+
+await update.message.reply_text(
+    "📝 Maruza matni bormi?\n\n"
+    "1️⃣ Ha (o‘zim yozaman)\n"
+    "2️⃣ Yo‘q (o‘zi generatsiya qilsin)"
+)
+if user_states.get(user_id) == "content_choice":
+    if text == "1" or "ha" in text.lower():
+        user_states[user_id] = "content_input"
+        await update.message.reply_text("📝 Maruza matnini yuboring:")
+    else:
+        user_data[user_id]["content"] = "auto"
+        user_states[user_id] = "type"
+
+        await update.message.reply_text(
+            "📝 PPT turini tanlang:\n1. Maruza\n2. Oddiy yozma"
+        )
+    return
         user_data[user_id] = {"topic": text}
         user_states[user_id] = "type"
 
@@ -75,6 +101,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await update.message.reply_text("🎨 Dizayn tanlang (1–6):")
         return
+content = data.get("content", "auto")
+
+if content == "auto":
+    content_text = "🤖 Avtomatik generatsiya"
+else:
+    content_text = content[:200] + "..."  # uzun bo‘lsa qisqartir
+content = data.get("content", "auto")
+
+if content == "auto":
+    content_text = "🤖 Avtomatik generatsiya"
+else:
+    content_text = content[:200] + "..."  # uzun bo‘lsa qisqartir
 
     # 🎨 DIZAYN
     if user_states.get(user_id) == "design":
